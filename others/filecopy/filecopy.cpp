@@ -1,74 +1,98 @@
-// Write a C++ Program to Create a File 'People.dat' with name and age
-// and to copy all the users available to vote 'Voters.dat' (above 18).
+// Write a C++ Program to Store a list of People and transfer all 
+// off them above 18 to another list of Voters.dat
+
 #include <iostream>
-#include <cstring>
 #include <fstream>
+#include <cstring>
 using namespace std;
 
 class PEOPLE {
     private:
         char name[30];
         int age;
+    
     public:
-        PEOPLE(const char* n = "", int a = 0) : age(a) {
+        PEOPLE(const char* n="", int a=0) : age(a) {
             strncpy(name, n, 30);
-        }
+        } 
 
-        int get_age() const {
+        int get_age() {
             return age;
         }
-        void get_data() {
-            cout << "Enter Name: ";
-            cin.ignore();
-            cin.getline(name, 30);
-            cout << "Enter Age: ";
-            cin >> age;
+
+        void write_to_file(ofstream &file) {
+            file.write(reinterpret_cast<char*>(this), sizeof(PEOPLE));
         }
 
-        void put_data() {
-            cout << name << " " << age << endl;
+        void read_from_file(ifstream &file) {
+            file.read(reinterpret_cast<char*>(this), sizeof(PEOPLE));
         }
-
-        void create_file() {
-            ofstream file("people.dat", ios::binary | ios::app);
-            if (file.is_open()) {
-                file.write(reinterpret_cast<char*>(this), sizeof(PEOPLE));
-                file.close();
-            } else {
-                cout << "Error Opening File";
-            }
+        void display() const {
+            cout << "Name: " << name << ", Age: " << age << endl;
         }
 };
 
-void transfer_data() {
-            ifstream infile("people.dat", ios::binary);
-            ofstream voters("voters.dat", ios::binary | ios::app);
-            PEOPLE person;
+void SegregateVoters() {
+    ifstream mainfile("people.dat", ios::binary);
+    if (!mainfile) {
+        cerr << "Error Opening File";
+        return;
+    }
 
-            person.get_data();
-            person.create_file();
-            if (!(infile.is_open())) {
-                cout << "Error Opening File";
-            }
-            if (infile.is_open()) {
-                cout << "NAME\tAGE\n";
-                while(infile.read(reinterpret_cast<char*>(&person), sizeof(PEOPLE))) {
-                    person.put_data();
-                }
-                infile.close();
-            } else {
-                cout << "Error Opening File";
-            }
-            while (infile.read(reinterpret_cast<char*>(&person), sizeof(PEOPLE))) {
-                if (person.get_age() > 18) {
-                    voters.put_data();
-                }
-            }
-            infile.close();
-            voters.close();
+    ofstream voter("voters.dat", ios::binary | ios::app);
+    if (!voter) {
+        cerr << "Error Opening File";
+        return;
+    }
+
+    PEOPLE person;
+
+    while(mainfile.read(reinterpret_cast<char*>(&person), sizeof(PEOPLE))) {
+        if (person.get_age() >= 18) {
+            person.write_to_file(voter);
         }
+    }
+
+    mainfile.close();
+
+}
 
 int main(void) {
-    transfer_data();
-    cout << "--- END ---";
+    int numPeople;
+
+    ofstream outmain("people.dat", ios::binary | ios::app);
+    if (!outmain) {
+        cerr << "Error Opening File";
+        return 1;
+    }
+
+    cout << "Enter number of people: ";
+    cin >> numPeople;
+
+    for (int i=0; i<numPeople; i++) {
+        char name[30];
+        int age;
+
+        cout << "Enter Details for Person-" << i+1 << ": "<< endl;
+        cout << "Enter Name: ";
+        cin.ignore();
+        cin.getline(name, 30);
+        cout << "Enter Age: ";
+        cin >> age;
+
+        PEOPLE person(name, age);
+        person.write_to_file(outmain);
+    } 
+    outmain.close();
+    cout << "Data Input to people.dat Successful" << endl;
+
+    cout << endl << "Tranferring Filtered Data to voters.dat ... " << endl;
+    SegregateVoters();
+
+    PEOPLE person;
+    ifstream voter("voters.dat", ios::binary);
+    while (voter.read(reinterpret_cast<char*>(&person), sizeof(PEOPLE))) {
+        person.display();
+    }
+
 }

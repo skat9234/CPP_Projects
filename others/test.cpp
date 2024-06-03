@@ -29,7 +29,7 @@ void insert(int p) {
             cout << "Node inserted at position " << p << "." << endl;
             return;
         }
-
+    
         node* temp = start;
         for (int i = 1; i < p - 1 && temp != nullptr; ++i) {
             temp = temp->link;

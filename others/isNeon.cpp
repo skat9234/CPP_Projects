@@ -12,10 +12,10 @@ bool isNeon(int number) {
     
     // Calculate the sum of the digits of the square
     while (square > 0) {
-        sumOfDigits += square % 10;
+        sumOfDigits = sumOfDigits + (square % 10);
         square /= 10;
     }
-    
+    cout << square << endl;
     // Check if the sum of the digits equals the original number
     return sumOfDigits == number;
 }
